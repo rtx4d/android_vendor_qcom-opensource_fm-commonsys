@@ -28,6 +28,7 @@
 
 package com.caf.fmradio;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -86,9 +87,9 @@ import java.util.ArrayList;
 
 import com.caf.utils.FrequencyPicker;
 import com.caf.utils.FrequencyPickerDialog;
+
 import android.content.ServiceConnection;
 import android.media.MediaRecorder;
-
 import qcom.fmradio.FmConfig;
 import android.os.ServiceManager;
 
@@ -98,6 +99,7 @@ import com.caf.fmradio.HorizontalNumberPicker.Scale;
 
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 
 public class FMRadio extends Activity
 {
@@ -287,6 +289,17 @@ public class FMRadio extends Activity
       mCommandActive = CMD_NONE;
       mCommandFailed = CMD_NONE;
 
+      getWindow().setBackgroundDrawableResource(R.color.background_color);
+
+      // Set up your ActionBar
+      final ActionBar actionBar = getActionBar();
+      actionBar.setDisplayShowHomeEnabled(false);
+      actionBar.setDisplayShowTitleEnabled(false);
+      actionBar.setDisplayShowCustomEnabled(true);
+      actionBar.setCustomView(R.layout.action_bar);
+
+      ((TextView) findViewById(R.id.title)).setText(R.string.app_name);
+
       Log.d(LOGTAG, "onCreate - Height : "+ getWindowManager().getDefaultDisplay().getHeight()
             + " - Width  : "+ getWindowManager().getDefaultDisplay().getWidth());
 
@@ -333,13 +346,11 @@ public class FMRadio extends Activity
       mForwardButton = (ImageView)findViewById(R.id.btn_forward);
       if (mForwardButton != null) {
           mForwardButton.setOnClickListener(mForwardClickListener);
-          mForwardButton.setOnLongClickListener(mForwardLongClickListener);
       }
 
       mBackButton = (ImageView)findViewById(R.id.btn_back);
       if (mBackButton != null) {
           mBackButton.setOnClickListener(mBackClickListener);
-          mBackButton.setOnLongClickListener(mBackLongClickListener);
       }
 
       /* 6 Preset Buttons */
@@ -1433,35 +1444,15 @@ public class FMRadio extends Activity
    private View.OnClickListener mForwardClickListener =
       new View.OnClickListener() {
         public void onClick(View v) {
-          int frequency = FmSharedPreferences.getNextTuneFrequency();
-          Log.d(LOGTAG, "Tune Up: to " + frequency);
-          tuneRadio(frequency);
+            SeekNextStation();
       }
    };
 
    private View.OnClickListener mBackClickListener =
       new View.OnClickListener() {
         public void onClick(View v) {
-          int frequency = FmSharedPreferences.getPrevTuneFrequency();
-          Log.d(LOGTAG, "Tune Down: to " + frequency);
-          tuneRadio(frequency);
+            SeekPreviousStation();
       }
-   };
-
-   private View.OnLongClickListener mForwardLongClickListener =
-      new View.OnLongClickListener() {
-        public boolean onLongClick(View view) {
-          SeekNextStation();
-          return true;
-        }
-   };
-
-   private View.OnLongClickListener mBackLongClickListener =
-      new View.OnLongClickListener() {
-        public boolean onLongClick(View view) {
-          SeekPreviousStation();
-          return true;
-        }
    };
 
    private View.OnClickListener mPresetListClickListener =
@@ -1508,7 +1499,7 @@ public class FMRadio extends Activity
                showDialog(DIALOG_PRESET_OPTIONS);
            }else {
                addToPresets();
-               view.startAnimation(mAnimation);
+               //view.startAnimation(mAnimation);
            }
          return true;
       }
@@ -1825,8 +1816,7 @@ public class FMRadio extends Activity
 
    private void setRecordingStartImage() {
        if(null != mRecordingMsgTV) {
-          mRecordingMsgTV.setCompoundDrawablesWithIntrinsicBounds
-                           (R.drawable.recorder_start, 0, 0, 0);
+          mRecordingMsgTV.setCompoundDrawables(null,  null,  null,  null);
        }
    }
 
@@ -1995,23 +1985,23 @@ public class FMRadio extends Activity
       }
       if (mSleepMsgTV != null) {
          mSleepMsgTV.setVisibility(((bEnable && isSleepTimerActive()) ? View.VISIBLE
-                                 : View.INVISIBLE));
+                                 : View.GONE));
       }
       if (mRecordingMsgTV != null) {
          mRecordingMsgTV.setVisibility(((bEnable == true) ? View.VISIBLE
-                                     : View.INVISIBLE));
+                                     : View.GONE));
       }
       if (mRadioTextTV != null) {
          mRadioTextTV.setVisibility(((bEnable == true) ? View.VISIBLE
-                                  : View.INVISIBLE));
+                                  : View.GONE));
       }
       if(mERadioTextTV != null) {
          mERadioTextTV.setVisibility(((bEnable == true) ? View.VISIBLE
-                                  : View.INVISIBLE));
+                                  : View.GONE));
       }
       if (mProgramServiceTV != null) {
          mProgramServiceTV.setVisibility(((bEnable == true) ? View.VISIBLE
-                                  : View.INVISIBLE));
+                                  : View.GONE));
       }
 
       if (!isAntennaAvailable()) {
@@ -2030,6 +2020,7 @@ public class FMRadio extends Activity
          }
          if (mERadioTextTV != null) {
              mERadioTextTV.setText("");
+             mERadioTextTV.setVisibility(View.GONE);
              mERadioTextScroller.mOriginalString = "";
          }
          if (mOnOffButton != null) {
@@ -2042,6 +2033,7 @@ public class FMRadio extends Activity
          }
          if (mERadioTextTV != null) {
              mERadioTextTV.setText("");
+             mERadioTextTV.setVisibility(View.GONE);
              mERadioTextScroller.mOriginalString = "";
          }
          if (mOnOffButton != null) {
@@ -2050,8 +2042,8 @@ public class FMRadio extends Activity
       }
 
       if (mStereoTV != null) {
-          mStereoTV.setVisibility(((bEnable == true) ? View.VISIBLE
-                                   : View.INVISIBLE));
+          //mStereoTV.setVisibility(((bEnable == true) ? View.VISIBLE
+            //                       : View.INVISIBLE));
       }
       for (int nButton = 0; nButton < MAX_PRESETS_PER_PAGE; nButton++) {
          if (mPresetButtons[nButton] != null) {
@@ -2144,7 +2136,7 @@ public class FMRadio extends Activity
 
    private void updateStationInfoToUI() {
       double frequency = mTunedStation.getFrequency() / 1000.0;
-      mTuneStationFrequencyTV.setText("" + frequency + "MHz");
+      mTuneStationFrequencyTV.setText("" + frequency);
       if ((mPicker != null) && mUpdatePickerValue) {
           mPicker.setValue(((mTunedStation.getFrequency() - mPrefs.getLowerLimit())
                               / mPrefs.getFrequencyStepSize()));
@@ -2153,6 +2145,8 @@ public class FMRadio extends Activity
       mProgramTypeTV.setText(mTunedStation.getPtyString());
       mRadioTextTV.setText("");
       mERadioTextTV.setText("");
+      mERadioTextTV.setVisibility(View.GONE);
+      mRadioTextTV.setVisibility(View.GONE);
       mRadioTextScroller.mOriginalString = "";
       mRadioTextScroller.mStringlength = 0;
       mRadioTextScroller.mIteration = 0;
@@ -2440,7 +2434,7 @@ public class FMRadio extends Activity
          mSleepUpdateHandlerThread.interrupt();
       }
       if(null != mSleepMsgTV) {
-         mSleepMsgTV.setVisibility(View.INVISIBLE);
+         mSleepMsgTV.setVisibility(View.GONE);
       }
    }
 
@@ -2472,7 +2466,7 @@ public class FMRadio extends Activity
    }
 
    private void updateExpiredSleepTime() {
-      int vis = View.INVISIBLE;
+      int vis = View.GONE;
       if (isSleepTimerActive()) {
          long timeNow = ((SystemClock.elapsedRealtime()));
          if (mSleepAtPhoneTime >= timeNow) {
@@ -2481,8 +2475,8 @@ public class FMRadio extends Activity
             mSleepMsgTV.setText(sleepMsg);
             if (seconds < SLEEP_TOGGLE_SECONDS) {
                int nowVis = mSleepMsgTV.getVisibility();
-               vis = (nowVis == View.INVISIBLE) ? View.VISIBLE
-                     : View.INVISIBLE;
+               vis = (nowVis == View.GONE) ? View.VISIBLE
+                     : View.GONE;
             }else {
                vis = View.VISIBLE;
             }
@@ -2795,6 +2789,7 @@ public class FMRadio extends Activity
                    mERadioTextTV.setText("");
                    mERadioTextScroller.mOriginalString = "";
                }else {
+                   mERadioTextTV.setVisibility(View.GONE);
                    mERadioTextTV.setText(str);
                    mERadioTextScroller.mOriginalString = str;
                }
