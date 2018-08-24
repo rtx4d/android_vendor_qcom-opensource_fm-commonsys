@@ -45,26 +45,34 @@
 #include <utils/Log.h>
 #include <unistd.h>
 
+#ifdef QCOM_PROPRIETARY
 #include <vendor/qti/hardware/fm/1.0/IFmHci.h>
 #include <vendor/qti/hardware/fm/1.0/IFmHciCallbacks.h>
 #include <vendor/qti/hardware/fm/1.0/types.h>
+#endif /* QCOM_PROPRIETARY */
 #include "fm_hci.h"
 
 #include <hwbinder/ProcessState.h>
 
+#ifdef QCOM_PROPRIETARY
 using vendor::qti::hardware::fm::V1_0::IFmHci;
 using vendor::qti::hardware::fm::V1_0::IFmHciCallbacks;
 using vendor::qti::hardware::fm::V1_0::HciPacket;
 using vendor::qti::hardware::fm::V1_0::Status;
+#endif /* QCOM_PROPRIETARY */
 using android::hardware::ProcessState;
+#ifdef QCOM_PROPRIETARY
 using ::android::hardware::Return;
 using ::android::hardware::Void;
 using ::android::hardware::hidl_vec;
+#endif /* QCOM_PROPRIETARY */
 
 static struct fm_hci_t hci;
 
 typedef std::unique_lock<std::mutex> Lock;
+#ifdef QCOM_PROPRIETARY
 android::sp<IFmHci> fmHci;
+#endif /* QCOM_PROPRIETARY */
 
 static int enqueue_fm_rx_event(struct fm_event_header_t *hdr);
 static void dequeue_fm_rx_event();
@@ -498,6 +506,7 @@ static void initialization_complete(bool is_hci_initialize)
 ** Returns          int
 **
 *******************************************************************************/
+#ifdef QCOM_PROPRIETARY
 class FmHciCallbacks : public IFmHciCallbacks {
     public:
         FmHciCallbacks() {
@@ -616,6 +625,13 @@ static void hci_close()
         fmHci = nullptr;
     }
 }
+#else /* QCOM_PROPRIETARY */
+
+static bool hci_initialize() { return false; } // joshuous: Might need to review this one.
+static void hci_transmit(struct fm_command_header_t *hdr) {}
+static void hci_close() {}
+
+#endif /* QCOM_PROPRIETARY */
 
 /*******************************************************************************
 **
